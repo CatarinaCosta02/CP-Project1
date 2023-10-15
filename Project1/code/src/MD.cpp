@@ -27,6 +27,8 @@
 #include<stdlib.h>
 #include<math.h>
 #include<string.h>
+#include <stdio.h>
+#include <time.h>
 
 
 // Number of particles
@@ -83,7 +85,9 @@ double Kinetic();
 
 int main()
 {
-    
+    // variaveis para calcular tempo de execução
+    clock_t start, end;
+    double cpu_time_used;
     //  variable delcarations
     int i;
     double dt, Vol, Temp, Press, Pavg, Tavg, rho;
@@ -92,6 +96,7 @@ int main()
     char trash[10000], prefix[1000], tfn[1000], ofn[1000], afn[1000];
     FILE *infp, *tfp, *ofp, *afp;
     
+    start = clock(); // Registra o tempo inicial
     
     printf("\n  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     printf("                  WELCOME TO WILLY P CHEM MD!\n");
@@ -351,7 +356,11 @@ int main()
     printf("\n  TOTAL VOLUME (m^3):                      %10.5e \n",Vol*VolFac);
     printf("\n  NUMBER OF PARTICLES (unitless):          %i \n", N);
     
-    
+    end = clock(); // Registra o tempo final
+
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+    printf("Tempo de execução: %f segundos\n", cpu_time_used);
     
     
     fclose(tfp);
@@ -361,7 +370,8 @@ int main()
     return 0;
 }
 
-
+//  Function prototypes
+//  initialize positions on simple cubic lattice, also calls function to initialize velocities
 void initialize() {
     int n, p, i, j, k;
     double pos;
@@ -455,26 +465,33 @@ double Kinetic() { //Write Function here!
     
 }
 
-
+// aqui
 // Function to calculate the potential energy of the system
 double Potential() {
     double quot, r2, rnorm, term1, term2, Pot;
     int i, j, k;
     
     Pot=0.;
+
+    double term1_const = pow(sigma,12.);
+    double term2_const = pow(sigma,6.);
     for (i=0; i<N; i++) {
         for (j=0; j<N; j++) {
             
             if (j!=i) {
                 r2=0.;
                 for (k=0; k<3; k++) {
-                    r2 += (r[i][k]-r[j][k])*(r[i][k]-r[j][k]);
+                    double d = r[i][k] - r[j][k];
+                    r2 += d*d;
                 }
                 rnorm=sqrt(r2);
                 quot=sigma/rnorm;
-                term1 = pow(quot,12.);
-                term2 = pow(quot,6.);
-                
+                // reclacula muitas vezes a potencia.
+                //term1 = pow(quot,12.);
+                //term2 = pow(quot,6.);
+                term1 = term1_const / (quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot);
+                term2 = term2_const / (quot * quot * quot * quot * quot * quot);
+
                 Pot += 4*epsilon*(term1 - term2);
                 
             }
@@ -485,7 +502,7 @@ double Potential() {
 }
 
 
-
+// aquii
 //   Uses the derivative of the Lennard-Jones potential to calculate
 //   the forces on each atom.  Then uses a = F/m to calculate the
 //   accelleration of each atom. 
@@ -511,9 +528,14 @@ void computeAccelerations() {
                 //  sum of squares of the components
                 rSqd += rij[k] * rij[k];
             }
-            
+            // a potencia está inversa
+
+            double rSqdInverse = 1./ rSqd;
+            double rSqdInverse4 = rSqdInverse*rSqdInverse*rSqdInverse*rSqdInverse;
+            double rSqdINverse7 = rSqdInverse4*rSqdInverse*rSqdInverse*rSqdInverse;
             //  From derivative of Lennard-Jones with sigma and epsilon set equal to 1 in natural units!
-            f = 24 * (2 * pow(rSqd, -7) - pow(rSqd, -4));
+            //f = 24 * (2 * pow(rSqd, -7) - pow(rSqd, -4));
+            f = 24 * (2 * rSqdINverse7 - rSqdInverse4);
             for (k = 0; k < 3; k++) {
                 //  from F = ma, where m = 1 in natural units!
                 a[i][k] += rij[k] * f;
