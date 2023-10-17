@@ -1,6 +1,6 @@
 CC = gcc
 SRC = src/
-CFLAGS = # none
+CFLAGS = -O2
 
 .DEFAULT_GOAL = MD.exe
 
@@ -11,4 +11,4 @@ clean:
 	rm ./MD.exe
 
 run:
-	./MD.exe < inputdata.txt
+	sudo perf stat -e instructions,cycles ./MD.exe < inputdata.txt

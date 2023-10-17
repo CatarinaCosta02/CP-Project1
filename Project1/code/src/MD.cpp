@@ -27,8 +27,6 @@
 #include<stdlib.h>
 #include<math.h>
 #include<string.h>
-#include <stdio.h>
-#include <time.h>
 
 
 // Number of particles
@@ -85,9 +83,6 @@ double Kinetic();
 
 int main()
 {
-    // variaveis para calcular tempo de execução
-    clock_t start, end;
-    double cpu_time_used;
     //  variable delcarations
     int i;
     double dt, Vol, Temp, Press, Pavg, Tavg, rho;
@@ -96,7 +91,6 @@ int main()
     char trash[10000], prefix[1000], tfn[1000], ofn[1000], afn[1000];
     FILE *infp, *tfp, *ofp, *afp;
     
-    start = clock(); // Registra o tempo inicial
     
     printf("\n  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     printf("                  WELCOME TO WILLY P CHEM MD!\n");
@@ -356,13 +350,6 @@ int main()
     printf("\n  TOTAL VOLUME (m^3):                      %10.5e \n",Vol*VolFac);
     printf("\n  NUMBER OF PARTICLES (unitless):          %i \n", N);
     
-    end = clock(); // Registra o tempo final
-
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-    printf("Tempo de execução: %f segundos\n", cpu_time_used);
-    
-    
     fclose(tfp);
     fclose(ofp);
     fclose(afp);
@@ -473,24 +460,31 @@ double Potential() {
     
     Pot=0.;
 
-    double term1_const = pow(sigma,12.);
-    double term2_const = pow(sigma,6.);
     for (i=0; i<N; i++) {
         for (j=0; j<N; j++) {
             
             if (j!=i) {
                 r2=0.;
-                for (k=0; k<3; k++) {
+
+                double d1 = (r[i][0] - r[j][0])*(r[i][0] - r[j][0]);
+                double d2 = (r[i][1] - r[j][1])*(r[i][1] - r[j][1]);
+                double d3 = (r[i][2] - r[j][2])*(r[i][2] - r[j][2]);
+
+                r2 = (d1*d1) + (d2*d2) + (d3*d3);
+
+                /*for (k=0; k<3; k++) {
+
+                    //r2 += (r[i][k] - r[j][k])*(r[i][k] - r[j][k]);
                     double d = r[i][k] - r[j][k];
                     r2 += d*d;
-                }
+                }*/
                 rnorm=sqrt(r2);
                 quot=sigma/rnorm;
                 // reclacula muitas vezes a potencia.
                 //term1 = pow(quot,12.);
                 //term2 = pow(quot,6.);
-                term1 = term1_const / (quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot);
-                term2 = term2_const / (quot * quot * quot * quot * quot * quot);
+                term1 = ( quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot ) * (1.);
+                term2 = ( quot * quot * quot * quot * quot * quot ) * (1.);
 
                 Pot += 4*epsilon*(term1 - term2);
                 
@@ -513,6 +507,10 @@ void computeAccelerations() {
     
     
     for (i = 0; i < N; i++) {  // set all accelerations to zero
+        /*
+        a[i][0] = 0;
+        a[i][1] = 0;
+        a[i][2] = 0;*/
         for (k = 0; k < 3; k++) {
             a[i][k] = 0;
         }
@@ -522,12 +520,19 @@ void computeAccelerations() {
             // initialize r^2 to zero
             rSqd = 0;
             
+            rij[0] = r[i][0] - r[j][0];
+            rij[1] = r[i][1] - r[j][1];
+            rij[2] = r[i][2] - r[j][2];
+
+            rSqd = ((rij[0]*rij[0]) + (rij[1]*rij[1]) + (rij[2]*rij[2]));
+
+            /*
             for (k = 0; k < 3; k++) {
                 //  component-by-componenent position of i relative to j
                 rij[k] = r[i][k] - r[j][k];
                 //  sum of squares of the components
                 rSqd += rij[k] * rij[k];
-            }
+            }*/
             // a potencia está inversa
 
             double rSqdInverse = 1./ rSqd;
