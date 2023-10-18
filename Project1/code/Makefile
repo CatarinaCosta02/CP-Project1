@@ -12,3 +12,5 @@ clean:
 
 run:
 	sudo perf stat -e instructions,cycles ./MD.exe < inputdata.txt
+prof:
+	gprof MD.exe gmon.out | gprof2dot -w | dot -Tpng -o output.png
