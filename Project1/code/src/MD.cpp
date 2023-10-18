@@ -237,7 +237,7 @@ int main()
     // Vol = L*L*L;
     // Length of the box in natural units:
     L = pow(Vol,(1./3));
-    
+    //L = cbrt(Vol);
     //  Files that we can write different quantities to
     tfp = fopen(tfn,"w");     //  The MD trajectory, coordinates of every particle at each timestep
     ofp = fopen(ofn,"w");     //  Output of other quantities (T, P, gc, etc) at every timestep
@@ -473,16 +473,11 @@ double Potential() {
                 r2 = (d1*d1) + (d2*d2) + (d3*d3);
 
                 /*for (k=0; k<3; k++) {
-
-                    //r2 += (r[i][k] - r[j][k])*(r[i][k] - r[j][k]);
                     double d = r[i][k] - r[j][k];
                     r2 += d*d;
                 }*/
                 rnorm=sqrt(r2);
                 quot=sigma/rnorm;
-                // reclacula muitas vezes a potencia.
-                //term1 = pow(quot,12.);
-                //term2 = pow(quot,6.);
                 term1 = ( quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot ) * (1.);
                 term2 = ( quot * quot * quot * quot * quot * quot ) * (1.);
 
@@ -495,7 +490,6 @@ double Potential() {
     return Pot;
 }
 
-
 // aquii
 //   Uses the derivative of the Lennard-Jones potential to calculate
 //   the forces on each atom.  Then uses a = F/m to calculate the
@@ -507,14 +501,11 @@ void computeAccelerations() {
     
     
     for (i = 0; i < N; i++) {  // set all accelerations to zero
-        /*
+        
         a[i][0] = 0;
         a[i][1] = 0;
-        a[i][2] = 0;*/
-        for (k = 0; k < 3; k++) {
-            a[i][k] = 0;
+        a[i][2] = 0;   
         }
-    }
     for (i = 0; i < N-1; i++) {   // loop over all distinct pairs i,j
         for (j = i+1; j < N; j++) {
             // initialize r^2 to zero
@@ -525,22 +516,9 @@ void computeAccelerations() {
             rij[2] = r[i][2] - r[j][2];
 
             rSqd = ((rij[0]*rij[0]) + (rij[1]*rij[1]) + (rij[2]*rij[2]));
-
-            /*
-            for (k = 0; k < 3; k++) {
-                //  component-by-componenent position of i relative to j
-                rij[k] = r[i][k] - r[j][k];
-                //  sum of squares of the components
-                rSqd += rij[k] * rij[k];
-            }*/
-            // a potencia está inversa
-
-            double rSqdInverse = 1./ rSqd;
-            double rSqdInverse4 = rSqdInverse*rSqdInverse*rSqdInverse*rSqdInverse;
-            double rSqdINverse7 = rSqdInverse4*rSqdInverse*rSqdInverse*rSqdInverse;
             //  From derivative of Lennard-Jones with sigma and epsilon set equal to 1 in natural units!
             //f = 24 * (2 * pow(rSqd, -7) - pow(rSqd, -4));
-            f = 24 * (2 * rSqdINverse7 - rSqdInverse4);
+            f = 24 * (2 * 1./(rSqd * rSqd * rSqd* rSqd * rSqd * rSqd * rSqd)) - 1./(rSqd * rSqd * rSqd * rSqd);
             for (k = 0; k < 3; k++) {
                 //  from F = ma, where m = 1 in natural units!
                 a[i][k] += rij[k] * f;
@@ -573,6 +551,7 @@ double VelocityVerlet(double dt, int iter, FILE *fp) {
     computeAccelerations();
     //  Update velocity with updated acceleration
     for (i=0; i<N; i++) {
+        
         for (j=0; j<3; j++) {
             v[i][j] += 0.5*a[i][j]*dt;
         }
