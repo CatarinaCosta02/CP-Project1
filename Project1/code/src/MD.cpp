@@ -467,20 +467,20 @@ double Potential()
 
     double Pot = 0.;
 
-    for (int k = 0; k < 3; k++)
+    /*for (int k = 0; k < 3; k++)
     {
         for (int i = 0; i < N; i++)
         {
             double r2 = 0.;
             double d = 0.0; 
 
-            for (int j = 0; j < N; j++)
+            for (int j= i+1; j < N; j++)
             {
-                if (j != i)
-                {
+                
+                
                     d = r[i][k] - r[j][k];
                     r2 += d * d;
-                }
+                
             }
 
             double rnorm = sqrt(r2);
@@ -490,7 +490,39 @@ double Potential()
 
             Pot += 4 * epsilon * (term1 - term2);
         }
-    }
+    }*/
+    
+    for (int i = 0; i < N; i++)
+        {
+            double r2 = 0.;
+            double xi = r[i][0];
+            double yi = r[i][1];
+            double zi = r[i][2];
+
+            for (int j= i+1; j < N; j++)
+            {
+                
+                double xj = r[j][0];
+                double yj = r[j][1];
+                double zj = r[j][2];
+
+                double x = xi - xj;
+                double y = yi - yj;
+                double z = zi - zj;
+                
+                r2 = (x*x) + (y*y) + (z*z);
+                
+            }
+
+            double rnorm = sqrt(r2);
+            double quot = sigma / rnorm;
+            double term1 = quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * 1.;
+            double term2 = quot * quot * quot * quot * quot * quot * 1.;
+
+            Pot += 4 * epsilon * (term1 - term2);
+        }
+    
+
 
     return Pot;
 }
