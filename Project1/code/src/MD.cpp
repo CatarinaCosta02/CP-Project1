@@ -354,7 +354,7 @@ int main()
     printf("\n  THE COMPRESSIBILITY (unitless):          %15.5f \n", Z);
     printf("\n  TOTAL VOLUME (m^3):                      %10.5e \n", Vol * VolFac);
     printf("\n  NUMBER OF PARTICLES (unitless):          %i \n", N);
-
+    
     fclose(tfp);
     fclose(ofp);
     fclose(afp);
@@ -462,67 +462,38 @@ double Kinetic()
 // Function to calculate the potential energy of the system
 double Potential()
 {
-   //double quot, rnorm, term1, term2, Pot;
-    //int i, j, k;
+    double quot, rnorm, term1, term2, Pot, r2, xi, yi, zi, xj, yj, zj, x, y, z;
+    int i, j, k;
 
-    double Pot = 0.;
+    Pot = 0.;
 
-    /*for (int k = 0; k < 3; k++)
+    for (i = 0; i < N; i++)
     {
-        for (int i = 0; i < N; i++)
-        {
-            double r2 = 0.;
-            double d = 0.0; 
+            xi = r[i][0];
+            yi = r[i][1];
+            zi = r[i][2];
 
-            for (int j= i+1; j < N; j++)
-            {
-                
-                
-                    d = r[i][k] - r[j][k];
-                    r2 += d * d;
-                
-            }
+        for (j = i + 1; j < N; j++){
+            r2 = 0.; 
+                  
+            xj = r[j][0];
+            yj = r[j][1];
+            zj = r[j][2];
 
-            double rnorm = sqrt(r2);
-            double quot = sigma / rnorm;
-            double term1 = quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * 1.;
-            double term2 = quot * quot * quot * quot * quot * quot * 1.;
+            x = xi - xj;
+            y = yi - yj;
+            z = zi - zj;
 
-            Pot += 4 * epsilon * (term1 - term2);
-        }
-    }*/
-    
-    for (int i = 0; i < N; i++)
-        {
-            double r2 = 0.;
-            double xi = r[i][0];
-            double yi = r[i][1];
-            double zi = r[i][2];
+            r2 = x * x + y * y + z * z;
 
-            for (int j= i+1; j < N; j++)
-            {
-                
-                double xj = r[j][0];
-                double yj = r[j][1];
-                double zj = r[j][2];
-
-                double x = xi - xj;
-                double y = yi - yj;
-                double z = zi - zj;
-                
-                r2 = (x*x) + (y*y) + (z*z);
-                
-            }
-
-            double rnorm = sqrt(r2);
-            double quot = sigma / rnorm;
-            double term1 = quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * 1.;
-            double term2 = quot * quot * quot * quot * quot * quot * 1.;
+            rnorm = sqrt(r2);
+            quot = sigma / rnorm;
+            term1 = quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * 1.;
+            term2 = quot * quot * quot * quot * quot * quot * 1.;
 
             Pot += 4 * epsilon * (term1 - term2);
         }
-    
-
+    }
 
     return Pot;
 }
