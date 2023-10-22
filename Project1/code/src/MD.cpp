@@ -24,6 +24,7 @@
 
  */
 #include <stdio.h>
+#include <omp.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -458,70 +459,40 @@ double Kinetic()
     return kin;
 }
 
-// aqui
-/*
-double Potential() {
-    double quot, r2, rnorm, term1, term2, Pot;
-    int i, j, k;
-    
-    Pot=0.;
-    for (i=0; i<N; i++) {
-        for (j=0; j<N; j++) {
-            
-            if (j!=i) {
-                r2=0.;
-                for (k=0; k<3; k++) {
-                    r2 += (r[i][k]-r[j][k])*(r[i][k]-r[j][k]);
-                }
-                rnorm=sqrt(r2);
-                quot=sigma/rnorm;
-                term1 = pow(quot,12.);
-                term2 = pow(quot,6.);
-                
-                Pot += 4*epsilon*(term1 - term2);
-                
-            }
-        }
-    }
-    
-    return Pot;
-}
-*/
 // Function to calculate the potential energy of the system
 double Potential()
 {
-    double quot, rnorm, term1, term2, Pot, r2, xi, yi, zi, xj, yj, zj, x, y, z;
+    double quot, term1, term2, Pot, r2, xi, yi, zi, xj, yj, zj, x, y, z;
     int i, j, k;
 
     Pot = 0.;
 
     for (i = 0; i < N; i++)
     {
-            xi = r[i][0];
-            yi = r[i][1];
-            zi = r[i][2];
+        xi = r[i][0];
+        yi = r[i][1];
+        zi = r[i][2];
 
-        for (j=0; j<N; j++){
-            if(i!=j){
-                r2 = 0.; 
+        for (j = i + 1; j < N; j++)
+        {
+                r2 = 0.;
 
-            xj = r[j][0];
-            yj = r[j][1];
-            zj = r[j][2];
+                xj = r[j][0];
+                yj = r[j][1];
+                zj = r[j][2];
 
-            x = xi - xj;
-            y = yi - yj;
-            z = zi - zj;
+                x = xi - xj;
+                y = yi - yj;
+                z = zi - zj;
 
-            r2 = x * x + y * y + z * z;
+                r2 = x * x + y * y + z * z;
 
-            rnorm = sqrt(r2);
-            quot = sigma / rnorm;
-            term1 = quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * quot * 1.;
-            term2 = quot * quot * quot * quot * quot * quot * 1.;
+                quot = sigma / r2;
+                term1 = quot * quot * quot * quot * quot * quot * 1.;
+                term2 = quot * quot * quot * 1.;
 
-            Pot += 4 * epsilon * (term1 - term2); 
-            }
+                Pot += 4 * epsilon * (term1 - term2);
+            
         }
     }
 
@@ -557,6 +528,8 @@ void computeAccelerations()
             rij[3];
             rSqd = 0;
 
+            // vai mase buscar as bolachas pa
+
             rij[0] = r[i][0] - r[j][0];
             rSqd += rij[0] * rij[0];
             rij[1] = r[i][1] - r[j][1];
@@ -588,6 +561,7 @@ double VelocityVerlet(double dt, int iter, FILE *fp)
 {
     int i, j, k;
 
+    double half_dt = 0.5 * dt;
     double psum = 0.;
 
     //  Compute accelerations from forces at current position
@@ -598,13 +572,13 @@ double VelocityVerlet(double dt, int iter, FILE *fp)
     for (i = 0; i < N; i++)
     {
         // Update the position and velocity components for particle i
-        r[i][0] += v[i][0] * dt + 0.5 * a[i][0] * dt * dt;
-        r[i][1] += v[i][1] * dt + 0.5 * a[i][1] * dt * dt;
-        r[i][2] += v[i][2] * dt + 0.5 * a[i][2] * dt * dt;
+        r[i][0] += v[i][0] * dt + half_dt * a[i][0] * dt;
+        r[i][1] += v[i][1] * dt + half_dt * a[i][1] * dt;
+        r[i][2] += v[i][2] * dt + half_dt * a[i][2] * dt;
 
-        v[i][0] += 0.5 * a[i][0] * dt;
-        v[i][1] += 0.5 * a[i][1] * dt;
-        v[i][2] += 0.5 * a[i][2] * dt;
+        v[i][0] += half_dt * a[i][0];
+        v[i][1] += half_dt * a[i][1];
+        v[i][2] += half_dt * a[i][2];
 
         // printf("  %i  %6.4e   %6.4e   %6.4e\n",i,r[i][0],r[i][1],r[i][2]);
     }
@@ -614,9 +588,9 @@ double VelocityVerlet(double dt, int iter, FILE *fp)
     for (i = 0; i < N; i++)
     {
         // mudei
-        v[i][0] += 0.5 * a[i][0] * dt;
-        v[i][1] += 0.5 * a[i][1] * dt;
-        v[i][2] += 0.5 * a[i][2] * dt;
+        v[i][0] += half_dt * a[i][0];
+        v[i][1] += half_dt * a[i][1];
+        v[i][2] += half_dt * a[i][2];
     }
 
     // Elastic walls

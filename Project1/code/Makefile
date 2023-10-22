@@ -1,6 +1,6 @@
 CC = gcc
 SRC = src/
-CFLAGS = -O2
+CFLAGS = -pg -fopenmp -O2
 
 .DEFAULT_GOAL = MD.exe
 
@@ -11,6 +11,6 @@ clean:
 	rm ./MD.exe
 
 run:
-	sudo perf stat -e instructions,cycles ./MD.exe < inputdata.txt
+	sudo perf stat -e instructions,cycles,cache-misses ./MD.exe < inputdata.txt
 prof:
 	gprof MD.exe gmon.out | gprof2dot -w | dot -Tpng -o output.png
