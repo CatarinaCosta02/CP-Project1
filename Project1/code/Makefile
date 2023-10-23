@@ -1,6 +1,6 @@
 CC = gcc
 SRC = src/
-CFLAGS = # none
+CFLAGS = -pg -ftree-vectorize -msse4 -mavx -march=native -mtune=native -O3
 
 .DEFAULT_GOAL = MD.exe
 
@@ -11,4 +11,6 @@ clean:
 	rm ./MD.exe
 
 run:
-	./MD.exe < inputdata.txt
+	srun --partition=cpar perf stat -M cpi -e instructions,cycles,cache-misses,cache-references ./MD.exe < inputdata.txt
+prof:
+	gprof MD.exe gmon.out | gprof2dot -w | dot -Tpng -o output.png
